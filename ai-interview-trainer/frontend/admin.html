@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AI Interview Trainer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="logo-icon">AI</div>
+            Interview Trainer
+        </a>
+        <div class="navbar-links">
+            <a href="/admin">Admin</a>
+            <button onclick="handleAdminLogout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="admin-layout">
+        <aside class="admin-sidebar">
+            <nav class="admin-sidebar-nav">
+                <a class="active" href="#stats">Overview</a>
+                <a href="#section-users">Users</a>
+                <a href="#section-interviews">Interviews</a>
+                <a href="#section-questions">Questions</a>
+                <a href="#section-answers">Answers</a>
+                <a href="#section-results">Evaluations</a>
+            </nav>
+        </aside>
+
+        <main class="admin-content">
+            <div class="admin-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>Admin Dashboard</h1>
+                    <p>Overview of all application data</p>
+                </div>
+                <button class="btn btn-secondary" onclick="loadAllAdminData()">Refresh Data</button>
+            </div>
+
+            <div class="admin-stats-grid" id="stats">
+                <div class="admin-stat-card">
+                    <div class="stat-label">Total Users</div>
+                    <div class="stat-value" id="statUsers">-</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Total Interviews</div>
+                    <div class="stat-value" id="statInterviews">-</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Total Questions</div>
+                    <div class="stat-value" id="statQuestions">-</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Total Answers</div>
+                    <div class="stat-value" id="statAnswers">-</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Completed Interviews</div>
+                    <div class="stat-value" id="statCompleted">-</div>
+                </div>
+                <div class="admin-stat-card">
+                    <div class="stat-label">Average Score</div>
+                    <div class="stat-value" id="statAverage">-</div>
+                </div>
+            </div>
+
+            <div class="card" id="section-users" style="margin-bottom: 1.5rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="card-title">Users</h2>
+                    <input type="text" id="filterUsers" class="form-control" placeholder="Filter users..." style="max-width: 260px;">
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Interviews</th>
+                            <th>Completed</th>
+                            <th>Registered</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card" id="section-interviews" style="margin-bottom: 1.5rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="card-title">Interviews</h2>
+                    <input type="text" id="filterInterviews" class="form-control" placeholder="Filter interviews..." style="max-width: 260px;">
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Type</th>
+                            <th>Difficulty</th>
+                            <th>Status</th>
+                            <th>Score</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="interviewsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card" id="section-questions" style="margin-bottom: 1.5rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="card-title">Questions</h2>
+                    <input type="text" id="filterQuestions" class="form-control" placeholder="Filter questions..." style="max-width: 260px;">
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Interview</th>
+                            <th>#</th>
+                            <th>Question</th>
+                            <th>Type</th>
+                            <th>Role</th>
+                            <th>Difficulty</th>
+                        </tr>
+                    </thead>
+                    <tbody id="questionsBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card" id="section-answers" style="margin-bottom: 1.5rem;">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="card-title">Answers</h2>
+                    <input type="text" id="filterAnswers" class="form-control" placeholder="Filter answers..." style="max-width: 260px;">
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Question</th>
+                            <th>Answer</th>
+                            <th>Score</th>
+                            <th>Evaluation</th>
+                        </tr>
+                    </thead>
+                    <tbody id="answersBody"></tbody>
+                </table>
+            </div>
+
+            <div class="card" id="section-results">
+                <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                    <h2 class="card-title">Results / Evaluations</h2>
+                    <input type="text" id="filterResults" class="form-control" placeholder="Filter evaluations..." style="max-width: 260px;">
+                </div>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>User</th>
+                            <th>Interview</th>
+                            <th>Question</th>
+                            <th>Score</th>
+                            <th>Strengths</th>
+                            <th>Weaknesses</th>
+                            <th>Suggestions</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resultsBody"></tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/js/admin.js"></script>
+    <script>document.addEventListener('DOMContentLoaded', initAdminDashboard);</script>
+</body>
+</html>

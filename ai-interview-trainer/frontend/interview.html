@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interview - AI Interview Trainer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="logo-icon">AI</div>
+            Interview Trainer
+        </a>
+        <div class="navbar-links" id="userSection">
+            <a href="/dashboard">Dashboard</a>
+            <button onclick="api.auth.logout(); window.location.href='/login';">Logout</button>
+        </div>
+    </nav>
+
+    <div class="page">
+        <div class="container">
+            <!-- Setup Section -->
+            <div id="setupSection" class="hidden">
+                <div class="setup-container">
+                    <div class="section-title">
+                        <h2>Interview Setup</h2>
+                        <p>Configure your interview preferences</p>
+                    </div>
+
+                    <div class="card setup-card">
+                        <div id="setupError" class="alert alert-error hidden"></div>
+
+                        <input type="hidden" id="jobRole" value="">
+                        <input type="hidden" id="interviewType" value="">
+                        <input type="hidden" id="difficulty" value="">
+                        <input type="hidden" id="totalQuestions" value="5">
+
+                        <div class="form-group">
+                            <label>Job Role</label>
+                            <div class="option-grid" data-option-group="jobRole">
+                                <div class="option-card" data-field="jobRole" data-value="Software Developer">
+                                    <div class="option-label">Software Developer</div>
+                                </div>
+                                <div class="option-card" data-field="jobRole" data-value="Python Developer">
+                                    <div class="option-label">Python Developer</div>
+                                </div>
+                                <div class="option-card" data-field="jobRole" data-value="Java Developer">
+                                    <div class="option-label">Java Developer</div>
+                                </div>
+                                <div class="option-card" data-field="jobRole" data-value="Web Developer">
+                                    <div class="option-label">Web Developer</div>
+                                </div>
+                                <div class="option-card" data-field="jobRole" data-value="Data Analyst">
+                                    <div class="option-label">Data Analyst</div>
+                                </div>
+                                <div class="option-card" data-field="jobRole" data-value="Other">
+                                    <div class="option-label">Other</div>
+                                </div>
+                            </div>
+                            <input type="text" id="customRole" class="form-control mt-2 hidden" placeholder="Enter your job role...">
+                        </div>
+
+                        <div class="form-group">
+                            <label>Interview Type</label>
+                            <div class="option-grid" data-option-group="interviewType">
+                                <div class="option-card" data-field="interviewType" data-value="technical">
+                                    <div class="option-label">Technical</div>
+                                </div>
+                                <div class="option-card" data-field="interviewType" data-value="hr_behavioral">
+                                    <div class="option-label">HR / Behavioral</div>
+                                </div>
+                                <div class="option-card" data-field="interviewType" data-value="mixed">
+                                    <div class="option-label">Mixed</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Difficulty</label>
+                            <div class="option-grid" data-option-group="difficulty">
+                                <div class="option-card" data-field="difficulty" data-value="beginner">
+                                    <div class="option-label">Beginner</div>
+                                </div>
+                                <div class="option-card" data-field="difficulty" data-value="intermediate">
+                                    <div class="option-label">Intermediate</div>
+                                </div>
+                                <div class="option-card" data-field="difficulty" data-value="advanced">
+                                    <div class="option-label">Advanced</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Number of Questions</label>
+                            <div class="option-grid" data-option-group="totalQuestions">
+                                <div class="option-card selected" data-field="totalQuestions" data-value="5">
+                                    <div class="option-label">5 Questions</div>
+                                </div>
+                                <div class="option-card" data-field="totalQuestions" data-value="10">
+                                    <div class="option-label">10 Questions</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button id="startBtn" class="btn btn-primary btn-lg" style="width: 100%; margin-top: 1rem;">
+                            Start Interview
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interview Section -->
+            <div id="interviewSection" class="hidden">
+                <div class="interview-layout">
+                    <div class="interview-main">
+                        <div class="card question-card">
+                            <div class="question-number" id="questionNumber">Loading...</div>
+                            <div class="question-text" id="questionText">Preparing your question...</div>
+
+                            <div id="interviewError" class="alert alert-error hidden mt-2"></div>
+
+                            <div id="questionLoading" class="question-loading hidden">
+                                <div class="question-loading-content">
+                                    <div class="spinner-large"></div>
+                                    <p>Generating your question...</p>
+                                    <p class="question-loading-hint">This may take a moment while the AI prepares your interview question.</p>
+                                </div>
+                            </div>
+
+                            <div class="answer-section">
+                                <div id="mcqOptions" class="mcq-options hidden">
+                                    <div class="form-group">
+                                        <label>Select one answer:</label>
+                                        <div id="optionsList"></div>
+                                    </div>
+                                </div>
+                                <textarea
+                                    id="answerText"
+                                    class="form-control"
+                                    placeholder="Type your answer here..."
+                                    disabled
+                                ></textarea>
+                            </div>
+
+                            <div id="answerError" class="alert alert-error hidden mt-2"></div>
+
+                            <div id="feedbackPanel" class="feedback-panel hidden">
+                                <h4>Evaluation Result</h4>
+                                <div class="feedback-score" id="feedbackScore">Score: 0/10</div>
+
+                                <div style="margin-top: 0.75rem;">
+                                    <strong style="font-size: 0.85rem; color: var(--success);">Strengths</strong>
+                                    <ul class="feedback-list strengths" id="feedbackStrengths"></ul>
+                                </div>
+
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="font-size: 0.85rem; color: var(--danger);">Areas for Improvement</strong>
+                                    <ul class="feedback-list weaknesses" id="feedbackWeaknesses"></ul>
+                                </div>
+
+                                <div style="margin-top: 0.5rem;">
+                                    <strong style="font-size: 0.85rem; color: var(--warning);">Suggestions</strong>
+                                    <ul class="feedback-list" id="feedbackSuggestions"></ul>
+                                </div>
+                            </div>
+
+                            <div class="answer-actions">
+                                <button id="submitBtn" class="btn btn-primary" disabled>
+                                    Submit Answer
+                                </button>
+                                <button id="nextBtn" class="btn btn-success hidden" onclick="nextQuestion()">
+                                    Next Question
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="interview-sidebar">
+                        <div class="card sidebar-card">
+                            <h4 style="font-size: 0.9rem; font-weight: 600; margin-bottom: 0.75rem;">Progress</h4>
+                            <div class="progress-bar">
+                                <div class="progress-bar-fill" id="progressFill" style="width: 0%;"></div>
+                            </div>
+                            <div class="sidebar-info">
+                                <div class="sidebar-row">
+                                    <span class="sidebar-label">Questions</span>
+                                    <span class="sidebar-value" id="sidebarProgress">0/5</span>
+                                </div>
+                                <div class="sidebar-row">
+                                    <span class="sidebar-label">Role</span>
+                                    <span class="sidebar-value" id="sidebarRole">-</span>
+                                </div>
+                                <div class="sidebar-row">
+                                    <span class="sidebar-label">Difficulty</span>
+                                    <span class="sidebar-value" id="sidebarDifficulty">-</span>
+                                </div>
+                                <div class="sidebar-row">
+                                    <span class="sidebar-label">Type</span>
+                                    <span class="sidebar-value" id="sidebarType">-</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <a href="/dashboard" class="btn btn-secondary" style="width: 100%; text-align: center;">
+                            Exit Interview
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/interview.js"></script>
+    <script>initInterview();</script>
+</body>
+</html>

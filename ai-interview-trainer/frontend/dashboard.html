@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - AI Interview Trainer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="logo-icon">AI</div>
+            Interview Trainer
+        </a>
+        <div class="navbar-links" id="userSection">
+            <a href="/dashboard">Dashboard</a>
+            <button onclick="handleLogout()">Logout</button>
+        </div>
+    </nav>
+
+    <div class="page">
+        <div class="container">
+            <div class="dashboard-header">
+                <h1>Your Dashboard</h1>
+                <p>Track your interview performance and history</p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="card stat-card">
+                    <div class="stat-label">Total Interviews</div>
+                    <div class="stat-value" id="totalInterviews">0</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-label">Completed</div>
+                    <div class="stat-value" id="completedInterviews">0</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-label">Average Score</div>
+                    <div class="stat-value highlight" id="averageScore">0.0</div>
+                </div>
+                <div class="card stat-card">
+                    <div class="stat-label">Highest Score</div>
+                    <div class="stat-value highlight" id="highestScore">0.0</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h2 style="font-size: 1.25rem; font-weight: 600;">Interview History</h2>
+                <a href="/interview" class="btn btn-primary">New Interview</a>
+            </div>
+
+            <div class="card">
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Role</th>
+                            <th>Difficulty</th>
+                            <th>Score</th>
+                            <th>Questions</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr>
+                            <td colspan="6" class="text-center" style="padding: 2rem; color: var(--gray-500);">
+                                Loading...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/dashboard.js"></script>
+    <script>initDashboard();</script>
+</body>
+</html>

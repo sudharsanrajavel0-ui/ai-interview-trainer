@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Results - AI Interview Trainer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="logo-icon">AI</div>
+            Interview Trainer
+        </a>
+        <div class="navbar-links">
+            <a href="/dashboard">Dashboard</a>
+            <button onclick="api.auth.logout(); window.location.href='/login';">Logout</button>
+        </div>
+    </nav>
+
+    <div class="page">
+        <div class="container">
+            <div class="results-container" id="resultsContent">
+                <div class="results-header">
+                    <h1>Interview Complete</h1>
+                    <div class="score-circle" id="scoreCircle">
+                        <div class="score-value" id="scoreValue">0.0</div>
+                        <div class="score-label">out of 10</div>
+                    </div>
+                </div>
+
+                <div class="card results-overall">
+                    <h3>Overall Feedback</h3>
+                    <p id="overallFeedback">Loading...</p>
+                </div>
+
+                <h2 style="font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem;">Question-by-Question Results</h2>
+
+                <div id="questionsResults" class="results-grid">
+                    <div class="text-center" style="padding: 2rem; color: var(--gray-500);">
+                        Loading results...
+                    </div>
+                </div>
+
+                <div class="results-actions">
+                    <a href="/interview" class="btn btn-primary btn-lg" id="btnRetake">Retake Interview</a>
+                    <a href="/dashboard" class="btn btn-secondary btn-lg" id="btnDashboard">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/api.js"></script>
+    <script src="/static/js/result.js"></script>
+    <script>initResult();</script>
+</body>
+</html>

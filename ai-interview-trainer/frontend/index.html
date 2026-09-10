@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Interview Trainer - Practice Interviews with AI</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="navbar-brand">
+            <div class="logo-icon">AI</div>
+            Interview Trainer
+        </a>
+        <div class="navbar-links" id="userSection">
+            <a href="/login">Login</a>
+            <a href="/admin">Admin</a>
+            <a href="/register" class="btn btn-primary btn-sm">Get Started</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="container">
+            <h1>Ace Your Next Interview</h1>
+            <p class="subtitle">
+                Practice with our AI-powered interviewer. Get instant feedback,
+                scores, and improvement tips for any job role.
+            </p>
+            <div class="hero-buttons">
+                <a href="/register" class="btn btn-primary btn-lg">Start Practicing Free</a>
+                <a href="#features" class="btn btn-outline btn-lg">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-title">
+                <h2>Everything You Need to Prepare</h2>
+                <p>Our platform gives you realistic interview practice with instant AI feedback</p>
+            </div>
+            <div class="features-grid">
+                <div class="card feature-card">
+                    <div class="icon">&#129302;</div>
+                    <h3>AI-Powered Questions</h3>
+                    <p>Get interview questions generated specifically for your target role and difficulty level.</p>
+                </div>
+                <div class="card feature-card">
+                    <div class="icon">&#128200;</div>
+                    <h3>Instant Scoring</h3>
+                    <p>Receive immediate scores and detailed feedback on each answer you provide.</p>
+                </div>
+                <div class="card feature-card">
+                    <div class="icon">&#128214;</div>
+                    <h3>Model Answers</h3>
+                    <p>See expert model answers to understand what interviewers expect.</p>
+                </div>
+                <div class="card feature-card">
+                    <div class="icon">&#128202;</div>
+                    <h3>Performance Reports</h3>
+                    <p>Track your progress with detailed performance summaries after each interview.</p>
+                </div>
+                <div class="card feature-card">
+                    <div class="icon">&#127919;</div>
+                    <h3>Multiple Roles</h3>
+                    <p>Practice for Software Developer, Python Developer, Web Developer, Data Analyst, and more.</p>
+                </div>
+                <div class="card feature-card">
+                    <div class="icon">&#128736;</div>
+                    <h3>Adjustable Difficulty</h3>
+                    <p>Choose beginner, intermediate, or advanced difficulty to match your skill level.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-title">
+                <h2>How It Works</h2>
+                <p>Get started in four simple steps</p>
+            </div>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>Choose Your Role</h3>
+                    <p>Select the job position you are preparing for</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>Set Difficulty</h3>
+                    <p>Pick your difficulty level and number of questions</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>Answer Questions</h3>
+                    <p>Respond to AI-generated interview questions</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>Get Feedback</h3>
+                    <p>Receive scores, strengths, and improvement tips</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <p>AI Interview Trainer &copy; 2026. Built for learning and interview preparation.</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/api.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            if (isLoggedIn()) {
+                document.getElementById('userSection').innerHTML = `
+                    <a href="/dashboard">Dashboard</a>
+                    <button onclick="api.auth.logout(); location.reload();" class="btn btn-secondary btn-sm">Logout</button>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

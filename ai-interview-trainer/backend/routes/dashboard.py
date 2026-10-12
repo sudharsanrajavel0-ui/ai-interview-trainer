@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from backend.database import get_db
-from backend.models import User, Interview
+from backend.models import User, Interview, Question, Answer, LoginEvent
 from backend.schemas import DashboardStats, InterviewListItem
 from backend.utils.security import get_current_user
 
@@ -38,10 +38,42 @@ def get_dashboard_stats(
         .all()
     )
 
+    # CHANGED: User dashboard charts — count of answers scoped to the authenticated user
+    questions_answered = (
+        db.query(func.count(Answer.id))
+        .join(Question, Answer.question_id == Question.id)
+        .join(Interview, Question.interview_id == Interview.id)
+        .filter(Interview.user_id == current_user.id)
+        .scalar()
+    ) or 0
+
     return DashboardStats(
         total_interviews=total,
         completed_interviews=len(completed),
         average_score=avg_score,
         highest_score=highest,
+        questions_answered=questions_answered,
         recent_interviews=[InterviewListItem.model_validate(i) for i in recent],
     )
+@router.get("/login_history")
+def get_login_history(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    events = (
+        db.query(LoginEvent)
+        .filter(LoginEvent.user_id == current_user.id)
+        .order_by(LoginEvent.created_at.desc())
+        .limit(50)
+        .all()
+    )
+    return [
+        {
+            "id": e.id,
+            "user_id": e.user_id,
+            "email": e.email,
+            "success": bool(e.success) if e.success is not None else True,
+            "created_at": e.created_at.isoformat() if e.created_at else None,
+        }
+        for e in events
+    ]

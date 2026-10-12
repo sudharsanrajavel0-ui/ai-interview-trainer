@@ -9,8 +9,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from backend.config import get_settings
-from backend.database import engine, Base
+from backend.database import engine, Base, SessionLocal
 from backend.routes import auth, interview, dashboard, admin
+from backend.models import SystemErrorEvent
 
 logger = logging.getLogger("ai_interview")
 logging.basicConfig(level=logging.INFO)
@@ -81,6 +82,26 @@ app.add_middleware(
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
     logger.error(f"Unhandled exception: {exc}", exc_info=True)
+    try:
+        db = SessionLocal()
+        try:
+            ip_address = request.client.host if request.client else None
+            user_agent = request.headers.get("user-agent")
+            error_event = SystemErrorEvent(
+                path=request.url.path,
+                method=request.method,
+                status_code=500,
+                error_type=type(exc).__name__,
+                message=str(exc)[:500] if exc else None,
+                ip_address=ip_address,
+                user_agent=user_agent,
+            )
+            db.add(error_event)
+            db.commit()
+        finally:
+            db.close()
+    except Exception:
+        pass
     return JSONResponse(
         status_code=500,
         content={"detail": "An internal server error occurred. Please try again."},

@@ -164,13 +164,15 @@ async function initAdminDashboard() {
 }
 
 async function loadAllAdminData() {
-    const [stats, users, interviews, questions, answers, results] = await Promise.all([
+    const [stats, users, interviews, questions, answers, results, loginEvents, errorEvents] = await Promise.all([
         adminFetch('/api/admin/stats'),
         adminFetch('/api/admin/users'),
         adminFetch('/api/admin/interviews'),
         adminFetch('/api/admin/questions'),
         adminFetch('/api/admin/answers'),
         adminFetch('/api/admin/results'),
+        adminFetch('/api/admin/login_events').catch(() => []),
+        adminFetch('/api/admin/error_events').catch(() => []),
     ]);
 
     adminData.users = users;
@@ -178,8 +180,12 @@ async function loadAllAdminData() {
     adminData.questions = questions;
     adminData.answers = answers;
     adminData.results = results;
+    adminData.login_events = loginEvents || [];
+    adminData.error_events = errorEvents || [];
 
     renderStats(stats);
+    // CHANGED: Admin dashboard charts
+    renderAdminCharts();
     renderTable('users', renderUsers);
     renderTable('interviews', renderInterviews);
     renderTable('questions', renderQuestions);
@@ -194,6 +200,51 @@ function renderStats(stats) {
     document.getElementById('statAnswers').textContent = stats.total_answers ?? 0;
     document.getElementById('statCompleted').textContent = stats.total_completed_interviews ?? 0;
     document.getElementById('statAverage').textContent = (stats.average_score ?? 0).toFixed(1);
+}
+
+// CHANGED: Admin dashboard charts — system-wide visualizations from real data.
+function renderAdminCharts() {
+    // A. User registrations over time (line chart) — from users.created_at
+    const registrations = buildDateCountSeries(adminData.users, 'created_at');
+    drawLineChart(document.getElementById('adminChartRegistrations'), {
+        labels: registrations.labels,
+        values: registrations.values,
+        xLabel: 'Date',
+        yLabel: 'Registrations',
+        emptyMessage: 'No registrations recorded yet.',
+    });
+
+    // B. Login activity over time (line chart) — from login events
+    const loginEvents = adminData.login_events || [];
+    const loginSeries = buildDateCountSeries(loginEvents, 'created_at');
+    drawLineChart(document.getElementById('adminChartLoginActivity'), {
+        labels: loginSeries.labels,
+        values: loginSeries.values,
+        xLabel: 'Date',
+        yLabel: 'Logins',
+        emptyMessage: 'No login activity recorded yet.',
+    });
+
+    // C. Error rates (bar chart) — from system error events
+    const errorEvents = adminData.error_events || [];
+    const errorSeries = buildDateCountSeries(errorEvents, 'created_at');
+    drawBarChart(document.getElementById('adminChartErrorRates'), {
+        labels: errorSeries.labels,
+        values: errorSeries.values,
+        xLabel: 'Time period',
+        yLabel: 'Errors',
+        emptyMessage: 'No system errors recorded yet.',
+    });
+
+    // D. Traffic / activity over time (line chart) — from interviews.created_at
+    const activity = buildDateCountSeries(adminData.interviews, 'created_at');
+    drawLineChart(document.getElementById('adminChartTraffic'), {
+        labels: activity.labels,
+        values: activity.values,
+        xLabel: 'Date',
+        yLabel: 'Interview sessions',
+        emptyMessage: 'No interview activity recorded yet.',
+    });
 }
 
 function renderTable(key, renderFn) {
@@ -291,6 +342,17 @@ function handleAdminLogout() {
         .then(() => { window.location.href = '/admin/login'; })
         .catch(() => { window.location.href = '/admin/login'; });
 }
+
+// CHANGED: Admin dashboard charts — redraw on window resize so the graphs track
+// their container width. Scoped to the admin page only (canvas ids are admin-only).
+let adminChartsResizeTimer = null;
+window.addEventListener('resize', function () {
+    if (!document.getElementById('adminChartRegistrations')) return;
+    clearTimeout(adminChartsResizeTimer);
+    adminChartsResizeTimer = setTimeout(function () {
+        renderAdminCharts();
+    }, 150);
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     const filters = ['users', 'interviews', 'questions', 'answers', 'results'];

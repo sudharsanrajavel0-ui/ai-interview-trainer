@@ -7,7 +7,9 @@ from datetime import datetime
 class UserCreate(BaseModel):
     full_name: str = Field(..., min_length=2, max_length=100)
     email: str = Field(..., min_length=5, max_length=150)
-    password: str = Field(..., min_length=6, max_length=100)
+    # CHANGED: Password policy is enforced in the auth route so that a clear,
+    # user-facing message is returned instead of a generic 422 validation error.
+    password: str = Field(..., min_length=1, max_length=100)
 
 
 class UserLogin(BaseModel):
@@ -139,6 +141,8 @@ class DashboardStats(BaseModel):
     completed_interviews: int
     average_score: float
     highest_score: float
+    # CHANGED: User dashboard charts — questions answered by the authenticated user
+    questions_answered: int = 0
     recent_interviews: List[InterviewListItem]
 
 

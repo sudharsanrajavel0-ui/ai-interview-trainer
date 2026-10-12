@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 
 from backend.config import get_settings
 from backend.database import get_db
-from backend.models import User, Interview, Question, Answer, Feedback
+from backend.models import User, Interview, Question, Answer, Feedback, LoginEvent, SystemErrorEvent
 
 settings = get_settings()
 
@@ -273,4 +273,36 @@ def admin_results(db: Session = Depends(get_db), _: str = Depends(get_current_ad
             "completed_at": _iso(iv.completed_at),
         }
         for f, a, q, iv, u in rows
+    ]
+
+
+@router.get("/login_events")
+def admin_login_events(db: Session = Depends(get_db), _: str = Depends(get_current_admin)):
+    events = db.query(LoginEvent).order_by(LoginEvent.created_at.asc()).all()
+    return [
+        {
+            "id": e.id,
+            "user_id": e.user_id,
+            "email": e.email,
+            "ip_address": e.ip_address,
+            "success": bool(e.success) if e.success is not None else True,
+            "created_at": _iso(e.created_at),
+        }
+        for e in events
+    ]
+
+
+@router.get("/error_events")
+def admin_error_events(db: Session = Depends(get_db), _: str = Depends(get_current_admin)):
+    events = db.query(SystemErrorEvent).order_by(SystemErrorEvent.created_at.asc()).all()
+    return [
+        {
+            "id": e.id,
+            "path": e.path,
+            "method": e.method,
+            "status_code": e.status_code,
+            "error_type": e.error_type,
+            "created_at": _iso(e.created_at),
+        }
+        for e in events
     ]

@@ -271,6 +271,69 @@ def submit_answer(
     return answer
 
 
+def _load_json_list(value):
+    """Parse a stored Feedback list column (JSON string or list) into a list of str."""
+    if not value:
+        return []
+    if isinstance(value, list):
+        return [str(item) for item in value if str(item).strip()]
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return [str(item) for item in parsed if str(item).strip()]
+        except (json.JSONDecodeError, TypeError):
+            pass
+        text = value.strip()
+        return [text] if text else []
+    return []
+
+
+def _overall_feedback_from_stored_evaluations(answers) -> str:
+    """Build an overall feedback paragraph from the per-question evaluations
+    already stored in the database (scores, strengths, weaknesses, suggestions).
+
+    Used only when the primary AI overall-feedback call fails, so the user still
+    receives honest feedback derived from the app's own stored evaluation data.
+    Returns an empty string if there is nothing to summarize.
+    """
+    strengths = []
+    improvements = []
+    for a in answers:
+        fb = getattr(a, "feedback", None)
+        if fb is None:
+            continue
+        for item in _load_json_list(fb.strengths):
+            if item not in strengths:
+                strengths.append(item)
+        for item in _load_json_list(fb.suggestions):
+            if item not in improvements:
+                improvements.append(item)
+        for item in _load_json_list(fb.weaknesses):
+            if item not in improvements:
+                improvements.append(item)
+
+    avg = (sum((a.score or 0.0) for a in answers) / len(answers)) if answers else 0.0
+
+    lines = []
+    if strengths:
+        lines.append(
+            "Demonstrated strengths:\n" + "".join(f"- {s}\n" for s in strengths)
+        )
+    if improvements:
+        lines.append(
+            "Areas to focus on:\n" + "".join(f"- {i}\n" for i in improvements)
+        )
+
+    if not lines:
+        return ""
+
+    return (
+        f"Overall average score: {avg:.1f}/10.\n\n"
+        + "\n".join(lines).rstrip()
+    )
+
+
 @router.post("/{interview_id}/complete", response_model=InterviewDetail)
 def complete_interview(
     interview_id: int,
@@ -299,16 +362,24 @@ def complete_interview(
         raise HTTPException(status_code=400, detail="No answers submitted yet")
 
     scores = []
+    answers = []
     questions_and_answers = []
     for q in interview.questions:
         if q.answer:
             scores.append(q.answer.score)
+            answers.append(q.answer)
             questions_and_answers.append({
                 "question": q.question_text,
                 "answer": q.answer.candidate_answer,
                 "score": q.answer.score,
             })
 
+    interview.status = "completed"
+    interview.completed_at = datetime.now(timezone.utc)
+    if scores:
+        interview.total_score = round(sum(scores) / len(scores), 1)
+
+    overall = None
     try:
         overall = generate_overall_feedback(
             job_role=interview.job_role,
@@ -317,16 +388,18 @@ def complete_interview(
             questions_and_answers=questions_and_answers,
         )
     except ValueError as e:
-        raise HTTPException(status_code=503, detail=str(e))
+        logger.error(f"AI overall feedback unavailable: {e}")
     except RuntimeError as e:
         logger.error(f"AI overall feedback failed: {e}")
-        raise HTTPException(status_code=503, detail=str(e))
 
-    interview.status = "completed"
-    interview.completed_at = datetime.now(timezone.utc)
+    if not overall:
+        overall = _overall_feedback_from_stored_evaluations(answers)
+        if overall:
+            logger.info(
+                "AI overall feedback unavailable; built overall feedback from "
+                "stored per-question evaluations."
+            )
     interview.overall_feedback = overall
-    if scores:
-        interview.total_score = round(sum(scores) / len(scores), 1)
 
     db.commit()
     db.refresh(interview)

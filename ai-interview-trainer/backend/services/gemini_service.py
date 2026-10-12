@@ -45,7 +45,8 @@ def _get_gemini_key() -> str:
 
 
 def _call_gemini(prompt: str, temperature: float = 0.7,
-                 max_output_tokens: int = 500, response_json: bool = False) -> str:
+                 max_output_tokens: int = 500, response_json: bool = False,
+                 timeout: float = 60.0, max_retries: int = MAX_RETRIES) -> str:
     api_key = _get_gemini_key()
     model = settings.effective_gemini_model
     url = GEMINI_API_URL.format(model=model)
@@ -63,15 +64,15 @@ def _call_gemini(prompt: str, temperature: float = 0.7,
         payload["contents"][0]["parts"][0]["text"] = prompt_text
 
     last_error = None
-    for attempt in range(MAX_RETRIES):
+    for attempt in range(max_retries):
         if attempt > 0:
             delay = _backoff_delay(attempt - 1, last_retry_after)
-            logger.info(f"Gemini retry {attempt}/{MAX_RETRIES} after {delay:.1f}s delay")
+            logger.info(f"Gemini retry {attempt}/{max_retries} after {delay:.1f}s delay")
             time.sleep(delay)
 
         last_retry_after = 0.0
         try:
-            logger.info(f"Gemini request attempt {attempt + 1}/{MAX_RETRIES} (model={model})")
+            logger.info(f"Gemini request attempt {attempt + 1}/{max_retries} (model={model})")
             response = httpx.post(
                 url,
                 params={"key": api_key},
@@ -79,7 +80,7 @@ def _call_gemini(prompt: str, temperature: float = 0.7,
                 headers={
                     "Content-Type": "application/json",
                 },
-                timeout=60.0,
+                timeout=timeout,
             )
 
             if response.status_code == 400:
@@ -124,7 +125,9 @@ def _call_gemini(prompt: str, temperature: float = 0.7,
                 logger.error(f"Gemini returned no parts: {data}")
                 raise RuntimeError("AI returned an empty response. Please try again.")
 
-            text = parts[0].get("text", "").strip()
+            text = "".join(
+                part.get("text", "") for part in parts if not part.get("thought")
+            ).strip()
             if not text:
                 raise RuntimeError("AI returned an empty response. Please try again.")
 
@@ -148,7 +151,7 @@ def _call_gemini(prompt: str, temperature: float = 0.7,
             last_error = RuntimeError("An unexpected error occurred while contacting the AI service.")
             continue
 
-    logger.error(f"Gemini failed after {MAX_RETRIES} attempts")
+    logger.error(f"Gemini failed after {max_retries} attempts")
     if last_error:
         raise last_error
     raise RuntimeError("AI service is currently unavailable. Please try again later.")
@@ -260,7 +263,8 @@ def _extract_mcq_from_text(response_text: str) -> Dict[str, Any]:
 
 
 def _mcq_response_raw(prompt: str) -> str:
-    return _call_gemini(prompt, temperature=0.7, max_output_tokens=1024, response_json=True)
+    return _call_gemini(prompt, temperature=0.7, max_output_tokens=1024, response_json=True,
+                        timeout=15.0, max_retries=1)
 
 
 def _normalize_mcq(result: Dict[str, Any]) -> Dict[str, Any]:
@@ -451,7 +455,8 @@ def generate_question(
     )
 
     try:
-        question_text = _call_gemini(prompt, temperature=0.7, max_output_tokens=200).strip()
+        question_text = _call_gemini(prompt, temperature=0.7, max_output_tokens=200,
+                                    timeout=15.0, max_retries=1).strip()
     except RuntimeError as e:
         logger.warning(f"Writing question Gemini call failed: {e}")
         logging.warning("Falling back to local question bank for writing question.")
@@ -583,4 +588,4 @@ def generate_overall_feedback(
         "Return ONLY the feedback text. No JSON, no formatting, no preamble."
     )
 
-    return _call_gemini(prompt, temperature=0.5, max_output_tokens=300)
+    return _call_gemini(prompt, temperature=0.5, max_output_tokens=1024)

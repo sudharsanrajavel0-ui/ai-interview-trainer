@@ -44,6 +44,22 @@
                 </div>
             </div>
 
+            <!-- CHANGED: User dashboard charts -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">Login History</h3>
+                    <canvas id="userChartLoginHistory" class="chart-canvas" height="200"></canvas>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Profile Completion</h3>
+                    <div id="profileCompletion" class="progress-list"></div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Usage Statistics</h3>
+                    <canvas id="userChartUsage" class="chart-canvas" height="200"></canvas>
+                </div>
+            </div>
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h2 style="font-size: 1.25rem; font-weight: 600;">Interview History</h2>
                 <a href="/interview" class="btn btn-primary">New Interview</a>
@@ -73,6 +89,7 @@
         </div>
     </div>
 
+    <script src="/static/js/charts.js"></script>
     <script src="/static/js/api.js"></script>
     <script src="/static/js/dashboard.js"></script>
     <script>initDashboard();</script>

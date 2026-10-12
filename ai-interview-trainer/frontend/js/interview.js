@@ -216,22 +216,35 @@ async function loadNextQuestion() {
 function renderMcqOptions(options) {
     const container = document.getElementById('optionsList');
     container.innerHTML = '';
-    options.forEach(option => {
+    (options || []).forEach((option, idx) => {
+        const qid = currentQuestion && currentQuestion.id ? currentQuestion.id : (currentQuestion && currentQuestion.question_number) || 'q';
+        const safeId = `mcq-${qid}-${idx}-${String(option).substring(0, 10).replace(/[^a-zA-Z0-9]/g, '_')}`;
         const label = document.createElement('label');
         label.className = 'mcq-option';
+        label.setAttribute('for', safeId);
+        label.dataset.value = option;
         const radio = document.createElement('input');
         radio.type = 'radio';
         radio.name = 'mcqOption';
+        radio.id = safeId;
         radio.value = option;
         const span = document.createElement('span');
         span.className = 'mcq-option-text';
         span.textContent = option;
         label.appendChild(radio);
         label.appendChild(span);
-        label.addEventListener('click', () => {
+        radio.addEventListener('change', () => {
             container.querySelectorAll('.mcq-option').forEach(el => el.classList.remove('selected'));
-            label.classList.add('selected');
+            if (radio.checked) {
+                label.classList.add('selected');
+            }
+        });
+        label.addEventListener('click', (e) => {
+            e.preventDefault();
+            container.querySelectorAll('.mcq-option').forEach(el => el.classList.remove('selected'));
             radio.checked = true;
+            label.classList.add('selected');
+            radio.dispatchEvent(new Event('change'));
         });
         container.appendChild(label);
     });
@@ -260,7 +273,7 @@ async function submitAnswer() {
     if (isMcq) {
         const selected = getSelectedMcqOption();
         if (!selected) {
-            errorDiv.textContent = 'Please select an answer.';
+            errorDiv.textContent = 'Please select an answer before submitting.';
             errorDiv.classList.remove('hidden');
             return;
         }
@@ -269,6 +282,7 @@ async function submitAnswer() {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<span class="spinner"></span> Evaluating...';
         document.querySelectorAll('input[name="mcqOption"]').forEach(r => r.disabled = true);
+        document.querySelectorAll('.mcq-option').forEach(el => el.style.pointerEvents = 'none');
 
         try {
             const result = await api.interviews.submitAnswer(currentInterview.id, null, selected);
@@ -283,6 +297,7 @@ async function submitAnswer() {
             errorDiv.textContent = getErrorMessage(error);
             errorDiv.classList.remove('hidden');
             document.querySelectorAll('input[name="mcqOption"]').forEach(r => r.disabled = false);
+            document.querySelectorAll('.mcq-option').forEach(el => el.style.pointerEvents = 'auto');
             submitBtn.disabled = false;
             submitBtn.innerHTML = 'Submit Answer';
             submitBtn.onclick = submitAnswer;
@@ -314,12 +329,12 @@ async function submitAnswer() {
         document.getElementById('nextBtn').classList.remove('hidden');
         document.getElementById('submitBtn').classList.add('hidden');
     } catch (error) {
-        errorDiv.textContent = error.message;
-        errorDiv.classList.remove('hidden');
-        document.getElementById('answerText').disabled = false;
-        submitBtn.disabled = false;
-        submitBtn.innerHTML = 'Submit Answer';
-        submitBtn.onclick = submitAnswer;
+            errorDiv.textContent = getErrorMessage(error);
+            errorDiv.classList.remove('hidden');
+            document.getElementById('answerText').disabled = false;
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = 'Submit Answer';
+            submitBtn.onclick = submitAnswer;
     } finally {
         isSubmitting = false;
     }

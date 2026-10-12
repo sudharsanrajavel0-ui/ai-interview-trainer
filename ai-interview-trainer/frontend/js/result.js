@@ -46,7 +46,7 @@ function renderResults(interview) {
 
     document.getElementById('scoreCircle').className = `score-circle ${scoreClass}`;
     document.getElementById('scoreValue').textContent = avgScore.toFixed(1);
-    document.getElementById('overallFeedback').textContent = interview.overall_feedback || 'No feedback available.';
+    document.getElementById('overallFeedback').textContent = interview.overall_feedback || 'We couldn\u2019t load your feedback right now. Please try again later.';
 
     const questionsHtml = (interview.questions || [])
         .filter(q => q.answer)

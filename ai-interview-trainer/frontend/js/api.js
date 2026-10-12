@@ -131,6 +131,9 @@ const api = {
         async getStats() {
             return apiRequest('/api/dashboard/stats');
         },
+        async getLoginHistory() {
+            return apiRequest('/api/dashboard/login_history');
+        },
     },
 
     interviews: {
